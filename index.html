@@ -73,7 +73,6 @@
                 const store = transaction.objectStore(STORE_NAME);
                 const request = store.getAll();
                 request.onsuccess = () => {
-                    // 배열을 객체 { date: image } 형태로 변환
                     const photosObj = {};
                     request.result.forEach(item => {
                         photosObj[item.date] = item.image;
@@ -159,7 +158,6 @@
             const [splitSelection, setSplitSelection] = useState([null, null]); 
             const [loading, setLoading] = useState(true);
             
-            // 스크롤 컨테이너 제어를 위한 ref
             const scrollRef = useRef(null);
 
             const today = new Date();
@@ -169,7 +167,6 @@
                     currentDate.getFullYear() === today.getFullYear();
             };
 
-            // 앱 시작 시 IndexedDB에서 데이터 로드
             useEffect(() => {
                 const loadData = async () => {
                     try {
@@ -195,7 +192,6 @@
                 }
             }, [viewMode, compareMode]);
 
-            // 사진 저장
             const handlePhotoUpload = async (e) => {
                 const file = e.target.files[0];
                 if (!file || !selectedDate) return;
@@ -210,7 +206,6 @@
                 }
             };
 
-            // 사진 삭제
             const handleDeletePhoto = async () => {
                 if (!selectedDate) return;
                 const dateKey = formatDateKey(currentDate.getFullYear(), currentDate.getMonth(), selectedDate);
@@ -234,6 +229,7 @@
             const hasPhotoToday = selectedDate && photos[selectedDateKey];
             const sortedPhotoDates = Object.keys(photos).sort();
             
+            // 갤러리 정렬: 과거(왼쪽) -> 현재(오른쪽)
             const gallerySortedDates = sortedPhotoDates; 
 
             if (loading) return <div className="h-screen flex items-center justify-center font-bold text-gray-400">데이터 로딩 중...</div>;
@@ -348,7 +344,6 @@
                                 ) : (
                                     <div className="flex flex-col justify-start gap-4 py-4 px-6">
                                     <div className="grid grid-cols-2 gap-4">
-                                        {/* 높이를 h-36 -> h-24, 패딩을 p-8 -> p-4로 수정하여 세로 크기 축소 */}
                                         <label className="flex flex-col items-center justify-center gap-2 bg-indigo-50 hover:bg-indigo-100 active:bg-indigo-200 rounded-2xl p-4 cursor-pointer transition-all h-24 sm:h-32">
                                             <div className="font-extrabold text-indigo-600 text-lg">촬영</div>
                                             <div className="text-indigo-400 text-xs">Camera</div>
@@ -384,16 +379,16 @@
                             {compareMode === 'gallery' && (
                             <div 
                                 ref={scrollRef}
-                                className="flex-1 overflow-x-auto flex items-center gap-0 p-0 snap-x snap-mandatory scrollbar-hide min-h-[80vh]"
+                                className="flex-1 overflow-x-auto flex items-center gap-0 p-0 snap-x snap-mandatory scrollbar-hide bg-black h-full"
                             >
                                 {gallerySortedDates.map((date) => (
-                                <div key={date} className="snap-center shrink-0 w-screen h-[80vh] bg-white flex flex-col border-r border-gray-100 relative">
-                                    <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10">
-                                        <span className="bg-white/80 backdrop-blur-sm border border-gray-200 px-4 py-1.5 rounded-full text-sm font-bold shadow-sm">{date}</span>
+                                <div key={date} className="snap-center shrink-0 w-screen h-full flex flex-col items-center justify-center relative">
+                                    <div className="absolute top-6 left-0 right-0 flex justify-center z-10">
+                                        <span className="bg-black/50 text-white px-4 py-1.5 rounded-full text-sm font-bold backdrop-blur-md shadow-lg border border-white/10">
+                                            {date}
+                                        </span>
                                     </div>
-                                    <div className="flex-1 flex items-center justify-center overflow-hidden">
-                                        <img src={photos[date]} alt={date} className="w-full h-full object-contain" />
-                                    </div>
+                                    <img src={photos[date]} alt={date} className="w-full h-full object-contain" />
                                 </div>
                                 ))}
                             </div>
@@ -417,12 +412,21 @@
                                 </div>
                                 <div className="bg-white rounded-2xl border border-gray-100 p-4 flex flex-col shadow-sm">
                                 <p className="text-xs text-gray-400 mb-3 font-bold px-1">비교할 사진 선택</p>
-                                <div className="grid grid-cols-4 gap-2">
+                                <div className="grid grid-cols-2 gap-3">
+                                    {/* 그리드 2열로 크게 표시 + 날짜 오버레이 추가 */}
                                     {sortedPhotoDates.map((date) => {
                                     const isSelected = splitSelection.includes(date);
                                     return (
-                                        <button key={date} disabled={isSelected} onClick={() => { const emptyIndex = splitSelection.indexOf(null); if (emptyIndex !== -1) { const newSel = [...splitSelection]; newSel[emptyIndex] = date; setSplitSelection(newSel); } else { setSplitSelection([splitSelection[1], date]); } }} className={`relative aspect-square rounded-lg overflow-hidden transition-all border bg-gray-50 ${isSelected ? 'opacity-30 border-gray-200' : 'border-transparent hover:border-gray-300'}`}>
-                                        <img src={photos[date]} alt={date} className="w-full h-full object-contain" />
+                                        <button key={date} disabled={isSelected} onClick={() => { const emptyIndex = splitSelection.indexOf(null); if (emptyIndex !== -1) { const newSel = [...splitSelection]; newSel[emptyIndex] = date; setSplitSelection(newSel); } else { setSplitSelection([splitSelection[1], date]); } }} className={`relative aspect-[4/3] rounded-xl overflow-hidden transition-all border bg-gray-50 group ${isSelected ? 'opacity-40 border-gray-200' : 'border-transparent hover:border-gray-300 shadow-sm'}`}>
+                                            <img src={photos[date]} alt={date} className="w-full h-full object-cover" />
+                                            <div className="absolute inset-x-0 bottom-0 bg-black/60 text-white text-sm font-bold py-2 text-center backdrop-blur-sm">
+                                                {date}
+                                            </div>
+                                            {isSelected && (
+                                                <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                                                    <span className="bg-black text-white text-xs px-2 py-1 rounded-full">선택됨</span>
+                                                </div>
+                                            )}
                                         </button>
                                     );
                                     })}
