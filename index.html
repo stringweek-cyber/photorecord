@@ -379,8 +379,9 @@
                             {compareMode === 'gallery' && (
                             <div 
                                 ref={scrollRef}
-                                className="flex-1 overflow-x-auto flex items-center gap-0 p-0 snap-x snap-mandatory scrollbar-hide bg-black h-full"
+                                className="flex-1 overflow-x-auto flex items-center gap-4 p-4 snap-x snap-mandatory scrollbar-hide bg-white h-full"
                             >
+                                {/* 슬라이드 뷰: 사진 사이 흰 공백(gap-4, bg-white) 추가 */}
                                 {gallerySortedDates.map((date) => (
                                 <div key={date} className="snap-center shrink-0 w-screen h-full flex flex-col items-center justify-center relative">
                                     <div className="absolute top-6 left-0 right-0 flex justify-center z-10">
@@ -388,7 +389,10 @@
                                             {date}
                                         </span>
                                     </div>
-                                    <img src={photos[date]} alt={date} className="w-full h-full object-contain" />
+                                    {/* object-contain으로 사진 전체가 보이면서, bg-black으로 레터박스 처리 */}
+                                    <div className="w-full h-full bg-black flex items-center justify-center">
+                                        <img src={photos[date]} alt={date} className="w-full h-full object-contain" />
+                                    </div>
                                 </div>
                                 ))}
                             </div>
@@ -413,12 +417,12 @@
                                 <div className="bg-white rounded-2xl border border-gray-100 p-4 flex flex-col shadow-sm">
                                 <p className="text-xs text-gray-400 mb-3 font-bold px-1">비교할 사진 선택</p>
                                 <div className="grid grid-cols-2 gap-3">
-                                    {/* 그리드 2열로 크게 표시 + 날짜 오버레이 추가 */}
+                                    {/* 1:1 비교 선택창: 세로 비율(aspect-[9/16]) 적용 및 사진 잘림 방지(object-contain) */}
                                     {sortedPhotoDates.map((date) => {
                                     const isSelected = splitSelection.includes(date);
                                     return (
-                                        <button key={date} disabled={isSelected} onClick={() => { const emptyIndex = splitSelection.indexOf(null); if (emptyIndex !== -1) { const newSel = [...splitSelection]; newSel[emptyIndex] = date; setSplitSelection(newSel); } else { setSplitSelection([splitSelection[1], date]); } }} className={`relative aspect-[4/3] rounded-xl overflow-hidden transition-all border bg-gray-50 group ${isSelected ? 'opacity-40 border-gray-200' : 'border-transparent hover:border-gray-300 shadow-sm'}`}>
-                                            <img src={photos[date]} alt={date} className="w-full h-full object-cover" />
+                                        <button key={date} disabled={isSelected} onClick={() => { const emptyIndex = splitSelection.indexOf(null); if (emptyIndex !== -1) { const newSel = [...splitSelection]; newSel[emptyIndex] = date; setSplitSelection(newSel); } else { setSplitSelection([splitSelection[1], date]); } }} className={`relative aspect-[9/16] rounded-xl overflow-hidden transition-all border bg-gray-100 group ${isSelected ? 'opacity-40 border-gray-200' : 'border-transparent hover:border-gray-300 shadow-sm'}`}>
+                                            <img src={photos[date]} alt={date} className="w-full h-full object-contain" />
                                             <div className="absolute inset-x-0 bottom-0 bg-black/60 text-white text-sm font-bold py-2 text-center backdrop-blur-sm">
                                                 {date}
                                             </div>
