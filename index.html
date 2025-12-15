@@ -34,7 +34,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState, useEffect, useRef } = React;
 
         // --- [핵심] IndexedDB 관리 함수 (대용량 저장소) ---
         const DB_NAME = 'PhotoLogDB';
@@ -158,6 +158,9 @@
             const [compareMode, setCompareMode] = useState('gallery'); 
             const [splitSelection, setSplitSelection] = useState([null, null]); 
             const [loading, setLoading] = useState(true);
+            
+            // 스크롤 컨테이너 제어를 위한 ref
+            const scrollRef = useRef(null);
 
             const today = new Date();
             const isToday = (day) => {
@@ -181,20 +184,26 @@
                 loadData();
             }, []);
 
+            // 갤러리 뷰 진입 시 스크롤을 맨 오른쪽(최신)으로 이동
+            useEffect(() => {
+                if (viewMode === 'compare' && compareMode === 'gallery' && scrollRef.current) {
+                    setTimeout(() => {
+                        if (scrollRef.current) {
+                            scrollRef.current.scrollLeft = scrollRef.current.scrollWidth;
+                        }
+                    }, 0);
+                }
+            }, [viewMode, compareMode]);
+
             // 사진 저장
             const handlePhotoUpload = async (e) => {
                 const file = e.target.files[0];
                 if (!file || !selectedDate) return;
 
                 try {
-                    // 고화질 압축
                     const compressedDataUrl = await compressImage(file);
                     const dateKey = formatDateKey(currentDate.getFullYear(), currentDate.getMonth(), selectedDate);
-                    
-                    // DB 저장
                     await saveToDB(dateKey, compressedDataUrl);
-                    
-                    // 상태 업데이트
                     setPhotos(prev => ({ ...prev, [dateKey]: compressedDataUrl }));
                 } catch (error) {
                     alert("사진 저장 중 오류가 발생했습니다: " + error);
@@ -205,7 +214,6 @@
             const handleDeletePhoto = async () => {
                 if (!selectedDate) return;
                 const dateKey = formatDateKey(currentDate.getFullYear(), currentDate.getMonth(), selectedDate);
-                
                 try {
                     await deleteFromDB(dateKey);
                     const newPhotos = { ...photos };
@@ -226,8 +234,7 @@
             const hasPhotoToday = selectedDate && photos[selectedDateKey];
             const sortedPhotoDates = Object.keys(photos).sort();
             
-            // 슬라이드 뷰용 정렬 (최신순: 역순 정렬)
-            const gallerySortedDates = [...sortedPhotoDates].reverse();
+            const gallerySortedDates = sortedPhotoDates; 
 
             if (loading) return <div className="h-screen flex items-center justify-center font-bold text-gray-400">데이터 로딩 중...</div>;
 
@@ -265,13 +272,11 @@
                     <div className="flex flex-col min-h-full pb-10">
                         <div className="bg-white px-4 pt-4 pb-8 shadow-sm z-10">
                             <div className="flex items-center justify-center gap-8 py-4 select-none">
-                                {/* 화살표 및 년월 폰트 사이즈 증가 */}
                                 <button onClick={prevMonth} className="text-gray-400 hover:text-black font-bold text-2xl p-2">&lt;</button>
                                 <span className="text-2xl font-extrabold text-gray-900">{year}년 {month + 1}월</span>
                                 <button onClick={nextMonth} className="text-gray-400 hover:text-black font-bold text-2xl p-2">&gt;</button>
                             </div>
                             
-                            {/* 요일 헤더: 일(빨강), 토(파랑) 적용 */}
                             <div className="grid grid-cols-7 text-center mb-4 text-sm font-bold select-none">
                                 {['일', '월', '화', '수', '목', '금', '토'].map((day, idx) => (
                                     <div key={day} className={`py-1 ${idx === 0 ? 'text-red-500' : idx === 6 ? 'text-blue-500' : 'text-gray-400'}`}>
@@ -289,16 +294,14 @@
                                     const isSelected = day === selectedDate;
                                     const isTodayDate = day && isToday(day);
                                     
-                                    // 요일별 텍스트 색상 결정
                                     let textColor = 'text-gray-800';
-                                    if (j === 0) textColor = 'text-red-500'; // 일요일
-                                    else if (j === 6) textColor = 'text-blue-500'; // 토요일
+                                    if (j === 0) textColor = 'text-red-500'; 
+                                    else if (j === 6) textColor = 'text-blue-500'; 
 
                                     return (
                                         <div key={j} className="flex flex-col items-center justify-center h-10 sm:h-12 relative">
                                         {day && (
                                             <button onClick={() => setSelectedDate(day)} className="w-full h-full flex items-center justify-center relative group">
-                                            {/* 날짜 숫자 폰트 text-lg로 키움 */}
                                             <div className={`
                                                 w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full text-lg font-bold transition-all relative z-10 
                                                 ${isTodayDate 
@@ -345,12 +348,13 @@
                                 ) : (
                                     <div className="flex flex-col justify-start gap-4 py-4 px-6">
                                     <div className="grid grid-cols-2 gap-4">
-                                        <label className="flex flex-col items-center justify-center gap-2 bg-indigo-50 hover:bg-indigo-100 active:bg-indigo-200 rounded-2xl p-8 cursor-pointer transition-all h-36 sm:h-44">
+                                        {/* 높이를 h-36 -> h-24, 패딩을 p-8 -> p-4로 수정하여 세로 크기 축소 */}
+                                        <label className="flex flex-col items-center justify-center gap-2 bg-indigo-50 hover:bg-indigo-100 active:bg-indigo-200 rounded-2xl p-4 cursor-pointer transition-all h-24 sm:h-32">
                                             <div className="font-extrabold text-indigo-600 text-lg">촬영</div>
                                             <div className="text-indigo-400 text-xs">Camera</div>
                                             <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhotoUpload} />
                                         </label>
-                                        <label className="flex flex-col items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 active:bg-gray-200 rounded-2xl p-8 cursor-pointer transition-all h-36 sm:h-44">
+                                        <label className="flex flex-col items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 active:bg-gray-200 rounded-2xl p-4 cursor-pointer transition-all h-24 sm:h-32">
                                             <div className="font-extrabold text-gray-700 text-lg">앨범</div>
                                             <div className="text-gray-400 text-xs">Gallery</div>
                                             <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
@@ -378,10 +382,10 @@
                         ) : (
                         <>
                             {compareMode === 'gallery' && (
-                            <div className="flex-1 overflow-x-auto flex items-center gap-0 p-0 snap-x snap-mandatory scrollbar-hide min-h-[80vh]">
-                                {/* 1. 최신순 정렬 (reverse) 
-                                   2. 화면 꽉 차게 (w-screen, h-[80vh], no padding) 
-                                */}
+                            <div 
+                                ref={scrollRef}
+                                className="flex-1 overflow-x-auto flex items-center gap-0 p-0 snap-x snap-mandatory scrollbar-hide min-h-[80vh]"
+                            >
                                 {gallerySortedDates.map((date) => (
                                 <div key={date} className="snap-center shrink-0 w-screen h-[80vh] bg-white flex flex-col border-r border-gray-100 relative">
                                     <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10">
