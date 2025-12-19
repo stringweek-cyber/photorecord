@@ -5,17 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>사진기록</title>
     
-    <!-- React & ReactDOM (CDN) -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     
-    <!-- Babel (JSX 변환용 CDN) -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
-    <!-- Tailwind CSS (스타일링 CDN) -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- 스타일 커스터마이징 -->
     <style>
         .scrollbar-hide::-webkit-scrollbar {
             display: none;
@@ -27,16 +23,17 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             touch-action: manipulation; 
+            background-color: #f9fafb; /* 전체 배경 살짝 회색조로 변경하여 박스 강조 */
         }
     </style>
 </head>
-<body class="bg-white">
+<body class="bg-gray-50">
     <div id="root"></div>
 
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        // --- [핵심] IndexedDB 관리 함수 (대용량 저장소) ---
+        // --- [핵심] IndexedDB 관리 함수 (변경 없음) ---
         const DB_NAME = 'PhotoLogDB';
         const STORE_NAME = 'photos';
         const DB_VERSION = 1;
@@ -229,24 +226,27 @@
             const hasPhotoToday = selectedDate && photos[selectedDateKey];
             const sortedPhotoDates = Object.keys(photos).sort();
             
-            // 갤러리 정렬: 과거(왼쪽) -> 현재(오른쪽)
             const gallerySortedDates = sortedPhotoDates; 
 
             if (loading) return <div className="h-screen flex items-center justify-center font-bold text-gray-400">데이터 로딩 중...</div>;
 
             return (
-                <div className="flex flex-col h-screen bg-white text-gray-800 font-sans overflow-hidden">
+                <div className="flex flex-col h-screen bg-gray-50 text-gray-800 font-sans overflow-hidden">
                 
                 {/* 헤더 */}
-                <header className="flex items-center justify-between px-5 py-4 bg-white border-b border-gray-100 z-20 shrink-0 select-none">
+                <header className="flex items-center justify-between px-5 py-4 bg-white border-b border-gray-100 z-20 shrink-0 select-none shadow-sm">
                     <h1 className="text-xl font-extrabold text-gray-900 tracking-tight flex items-center gap-2">
-                        <span>📸</span>
+                        {/* 카메라 이모지 대신 심플 체크 아이콘 */}
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-6 h-6 text-black">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                        </svg>
                         사진기록
                     </h1>
                     {viewMode === 'calendar' && (
                     <button 
                         onClick={() => setViewMode('compare')}
-                        className="text-xs font-bold text-white bg-black px-4 py-2 rounded-full active:bg-gray-800 transition-colors"
+                        /* 배경색 파란색, 폰트 사이즈 키움(text-sm) */
+                        className="text-sm font-bold text-white bg-blue-600 px-5 py-2.5 rounded-full active:bg-blue-700 transition-colors shadow-md hover:bg-blue-500"
                     >
                         비교하기
                     </button>
@@ -254,7 +254,7 @@
                     {viewMode === 'compare' && (
                     <button 
                         onClick={() => setViewMode('calendar')}
-                        className="text-xs font-bold text-gray-500 bg-gray-100 px-4 py-2 rounded-full active:bg-gray-200"
+                        className="text-sm font-bold text-gray-600 bg-gray-100 px-4 py-2 rounded-full active:bg-gray-200"
                     >
                         달력보기
                     </button>
@@ -266,95 +266,100 @@
                     {/* 달력 모드 */}
                     {viewMode === 'calendar' && (
                     <div className="flex flex-col min-h-full pb-10">
-                        <div className="bg-white px-4 pt-4 pb-8 shadow-sm z-10">
-                            <div className="flex items-center justify-center gap-8 py-4 select-none">
-                                <button onClick={prevMonth} className="text-gray-400 hover:text-black font-bold text-2xl p-2">&lt;</button>
-                                <span className="text-2xl font-extrabold text-gray-900">{year}년 {month + 1}월</span>
-                                <button onClick={nextMonth} className="text-gray-400 hover:text-black font-bold text-2xl p-2">&gt;</button>
-                            </div>
-                            
-                            <div className="grid grid-cols-7 text-center mb-4 text-sm font-bold select-none">
-                                {['일', '월', '화', '수', '목', '금', '토'].map((day, idx) => (
-                                    <div key={day} className={`py-1 ${idx === 0 ? 'text-red-500' : idx === 6 ? 'text-blue-500' : 'text-gray-400'}`}>
-                                        {day}
-                                    </div>
-                                ))}
-                            </div>
-                            
-                            <div className="w-full">
-                                {calendarData.map((week, i) => (
-                                <div key={i} className="grid grid-cols-7 mb-2 gap-y-2">
-                                    {week.map((day, j) => {
-                                    const dateKey = formatDateKey(year, month, day);
-                                    const isPhoto = dateKey && photos[dateKey];
-                                    const isSelected = day === selectedDate;
-                                    const isTodayDate = day && isToday(day);
-                                    
-                                    let textColor = 'text-gray-800';
-                                    if (j === 0) textColor = 'text-red-500'; 
-                                    else if (j === 6) textColor = 'text-blue-500'; 
-
-                                    return (
-                                        <div key={j} className="flex flex-col items-center justify-center h-10 sm:h-12 relative">
-                                        {day && (
-                                            <button onClick={() => setSelectedDate(day)} className="w-full h-full flex items-center justify-center relative group">
-                                            <div className={`
-                                                w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full text-lg font-bold transition-all relative z-10 
-                                                ${isTodayDate 
-                                                    ? 'bg-purple-600 text-white' 
-                                                    : isPhoto 
-                                                        ? 'bg-green-500 text-white' 
-                                                        : textColor
-                                                } 
-                                                ${isSelected && !isTodayDate && !isPhoto ? 'bg-gray-100 ring-1 ring-gray-300' : ''} 
-                                                ${isSelected && (isTodayDate || isPhoto) ? 'ring-2 ring-offset-2 ring-gray-400 scale-110' : ''}
-                                            `}>
-                                                {day}
-                                            </div>
-                                            {isTodayDate && <span className="absolute -bottom-1.5 text-[9px] text-purple-600 font-extrabold z-20 bg-white px-1 rounded-full leading-none">오늘</span>}
-                                            </button>
-                                        )}
-                                        </div>
-                                    );
-                                    })}
+                        {/* 달력 박스 컨테이너 */}
+                        <div className="px-4 py-4 z-10">
+                            {/* 라운드 박스 스타일 적용 */}
+                            <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-4 pb-6">
+                                <div className="flex items-center justify-center gap-8 py-2 select-none mb-2">
+                                    <button onClick={prevMonth} className="text-gray-400 hover:text-black font-bold text-2xl p-2">&lt;</button>
+                                    <span className="text-xl font-extrabold text-gray-900">{year}년 {month + 1}월</span>
+                                    <button onClick={nextMonth} className="text-gray-400 hover:text-black font-bold text-2xl p-2">&gt;</button>
                                 </div>
-                                ))}
+                                
+                                <div className="grid grid-cols-7 text-center mb-3 text-sm font-bold select-none text-gray-400">
+                                    {['일', '월', '화', '수', '목', '금', '토'].map((day, idx) => (
+                                        <div key={day} className={`py-1 ${idx === 0 ? 'text-red-500' : idx === 6 ? 'text-blue-500' : ''}`}>
+                                            {day}
+                                        </div>
+                                    ))}
+                                </div>
+                                
+                                <div className="w-full">
+                                    {calendarData.map((week, i) => (
+                                    <div key={i} className="grid grid-cols-7 mb-2 gap-y-1">
+                                        {week.map((day, j) => {
+                                        const dateKey = formatDateKey(year, month, day);
+                                        const isPhoto = dateKey && photos[dateKey];
+                                        const isSelected = day === selectedDate;
+                                        const isTodayDate = day && isToday(day);
+                                        
+                                        let textColor = 'text-gray-800';
+                                        if (j === 0) textColor = 'text-red-500'; 
+                                        else if (j === 6) textColor = 'text-blue-500'; 
+
+                                        return (
+                                            <div key={j} className="flex flex-col items-center justify-center h-10 sm:h-12 relative">
+                                            {day && (
+                                                <button onClick={() => setSelectedDate(day)} className="w-full h-full flex items-center justify-center relative group">
+                                                <div className={`
+                                                    w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full text-base font-bold transition-all relative z-10 
+                                                    ${isTodayDate 
+                                                        ? 'bg-purple-600 text-white' 
+                                                        : isPhoto 
+                                                            ? 'bg-green-500 text-white' 
+                                                            : textColor
+                                                    } 
+                                                    ${isSelected && !isTodayDate && !isPhoto ? 'bg-gray-100 ring-1 ring-gray-300' : ''} 
+                                                    ${isSelected && (isTodayDate || isPhoto) ? 'ring-2 ring-offset-2 ring-gray-400 scale-110' : ''}
+                                                `}>
+                                                    {day}
+                                                </div>
+                                                {isTodayDate && <span className="absolute -bottom-1 text-[9px] text-purple-600 font-extrabold z-20 bg-white px-1 rounded-full leading-none">오늘</span>}
+                                                </button>
+                                            )}
+                                            </div>
+                                        );
+                                        })}
+                                    </div>
+                                    ))}
+                                </div>
                             </div>
                         </div>
 
-                        <div className="flex-1 bg-white border-t border-gray-100 p-0">
+                        <div className="flex-1 bg-gray-50 p-0">
                         {selectedDate ? (
                             <div className="flex flex-col w-full min-h-[50vh]">
-                                <div className="px-6 py-4 flex justify-between items-center bg-white">
+                                <div className="px-6 py-2 flex justify-between items-center">
                                     <h3 className="text-lg font-bold text-gray-900">{month + 1}월 {selectedDate}일</h3>
                                 </div>
                                 {hasPhotoToday ? (
-                                    <div className="flex flex-col gap-0">
-                                    <div className="w-full bg-white relative">
-                                        <img src={photos[selectedDateKey]} alt="기록" className="w-full h-auto block" />
-                                    </div>
-                                    <div className="flex gap-3 shrink-0 p-6 pb-10">
-                                        <label className="flex-1 bg-white border-2 border-gray-200 text-gray-700 py-3.5 rounded-xl font-bold text-sm flex items-center justify-center cursor-pointer active:bg-gray-50 transition-colors">
-                                            사진 교체
-                                            <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
-                                        </label>
-                                        <button onClick={handleDeletePhoto} className="flex-1 bg-red-50 text-red-500 py-3.5 rounded-xl font-bold text-sm flex items-center justify-center active:bg-red-100 transition-colors">삭제</button>
-                                    </div>
+                                    <div className="flex flex-col gap-0 px-4">
+                                        <div className="w-full bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 relative">
+                                            <img src={photos[selectedDateKey]} alt="기록" className="w-full h-auto block" />
+                                        </div>
+                                        <div className="flex gap-3 shrink-0 py-6">
+                                            <label className="flex-1 bg-white border border-gray-300 text-gray-700 py-3 rounded-xl font-bold text-sm flex items-center justify-center cursor-pointer active:bg-gray-50 transition-colors shadow-sm">
+                                                사진 교체
+                                                <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
+                                            </label>
+                                            <button onClick={handleDeletePhoto} className="flex-1 bg-red-50 border border-red-100 text-red-500 py-3 rounded-xl font-bold text-sm flex items-center justify-center active:bg-red-100 transition-colors shadow-sm">삭제</button>
+                                        </div>
                                     </div>
                                 ) : (
-                                    <div className="flex flex-col justify-start gap-4 py-4 px-6">
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <label className="flex flex-col items-center justify-center gap-2 bg-indigo-50 hover:bg-indigo-100 active:bg-indigo-200 rounded-2xl p-4 cursor-pointer transition-all h-24 sm:h-32">
-                                            <div className="font-extrabold text-indigo-600 text-lg">촬영</div>
-                                            <div className="text-indigo-400 text-xs">Camera</div>
-                                            <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhotoUpload} />
-                                        </label>
-                                        <label className="flex flex-col items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 active:bg-gray-200 rounded-2xl p-4 cursor-pointer transition-all h-24 sm:h-32">
-                                            <div className="font-extrabold text-gray-700 text-lg">앨범</div>
-                                            <div className="text-gray-400 text-xs">Gallery</div>
-                                            <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
-                                        </label>
-                                    </div>
+                                    <div className="flex flex-col justify-start gap-4 py-2 px-6">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            {/* 버튼 높이를 작게 조절 (h-20 sm:h-24) */}
+                                            <label className="flex flex-col items-center justify-center gap-1 bg-white border border-indigo-100 hover:border-indigo-300 active:bg-indigo-50 rounded-2xl p-4 cursor-pointer transition-all shadow-sm h-20 sm:h-24">
+                                                <div className="font-extrabold text-indigo-600 text-base">촬영</div>
+                                                <div className="text-indigo-300 text-[10px]">Camera</div>
+                                                <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhotoUpload} />
+                                            </label>
+                                            <label className="flex flex-col items-center justify-center gap-1 bg-white border border-gray-200 hover:border-gray-300 active:bg-gray-50 rounded-2xl p-4 cursor-pointer transition-all shadow-sm h-20 sm:h-24">
+                                                <div className="font-extrabold text-gray-700 text-base">앨범</div>
+                                                <div className="text-gray-300 text-[10px]">Gallery</div>
+                                                <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
+                                            </label>
+                                        </div>
                                     </div>
                                 )}
                             </div>
@@ -367,10 +372,10 @@
 
                     {/* 비교 모드 */}
                     {viewMode === 'compare' && (
-                    <div className="flex flex-col min-h-full bg-white pb-10">
-                        <div className="flex p-3 bg-white border-b border-gray-100 z-10 sticky top-0 shrink-0 gap-2">
-                        <button onClick={() => setCompareMode('gallery')} className={`flex-1 py-3 text-sm font-bold rounded-xl transition-colors ${compareMode === 'gallery' ? 'bg-black text-white' : 'bg-gray-50 text-gray-400'}`}>슬라이드 뷰</button>
-                        <button onClick={() => setCompareMode('split')} className={`flex-1 py-3 text-sm font-bold rounded-xl transition-colors ${compareMode === 'split' ? 'bg-black text-white' : 'bg-gray-50 text-gray-400'}`}>1:1 비교</button>
+                    <div className="flex flex-col min-h-full bg-gray-50 pb-10">
+                        <div className="flex p-3 bg-white border-b border-gray-100 z-10 sticky top-0 shrink-0 gap-2 shadow-sm">
+                        <button onClick={() => setCompareMode('gallery')} className={`flex-1 py-3 text-sm font-bold rounded-xl transition-colors ${compareMode === 'gallery' ? 'bg-black text-white' : 'bg-gray-100 text-gray-400'}`}>슬라이드 뷰</button>
+                        <button onClick={() => setCompareMode('split')} className={`flex-1 py-3 text-sm font-bold rounded-xl transition-colors ${compareMode === 'split' ? 'bg-black text-white' : 'bg-gray-100 text-gray-400'}`}>1:1 비교</button>
                         </div>
                         {Object.keys(photos).length === 0 ? (
                         <div className="flex-1 flex flex-col items-center justify-center text-gray-300 gap-4 min-h-[50vh]"><p className="font-bold">기록된 사진이 없습니다</p></div>
@@ -379,18 +384,19 @@
                             {compareMode === 'gallery' && (
                             <div 
                                 ref={scrollRef}
-                                className="flex-1 overflow-x-auto flex items-center gap-4 p-4 snap-x snap-mandatory scrollbar-hide bg-white h-full"
+                                className="flex-1 overflow-x-auto flex items-center gap-6 p-6 snap-x snap-mandatory scrollbar-hide bg-gray-100 h-full"
                             >
-                                {/* 슬라이드 뷰: 사진 사이 흰 공백(gap-4, bg-white) 추가 */}
                                 {gallerySortedDates.map((date) => (
-                                <div key={date} className="snap-center shrink-0 w-screen h-full flex flex-col items-center justify-center relative">
-                                    <div className="absolute top-6 left-0 right-0 flex justify-center z-10">
-                                        <span className="bg-black/50 text-white px-4 py-1.5 rounded-full text-sm font-bold backdrop-blur-md shadow-lg border border-white/10">
+                                /* 슬라이드 뷰 수정: width를 화면보다 작게(w-[85vw]), 날짜를 사진 위로 배치 */
+                                <div key={date} className="snap-center shrink-0 w-[85vw] max-w-md h-[70vh] flex flex-col relative">
+                                    {/* 날짜 영역 */}
+                                    <div className="flex justify-center mb-4">
+                                        <span className="text-gray-500 font-extrabold text-lg tracking-wide bg-white px-4 py-1 rounded-full shadow-sm border border-gray-200">
                                             {date}
                                         </span>
                                     </div>
-                                    {/* object-contain으로 사진 전체가 보이면서, bg-black으로 레터박스 처리 */}
-                                    <div className="w-full h-full bg-black flex items-center justify-center">
+                                    {/* 사진 영역 */}
+                                    <div className="flex-1 bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] overflow-hidden flex items-center justify-center border border-gray-100">
                                         <img src={photos[date]} alt={date} className="w-full h-full object-contain" />
                                     </div>
                                 </div>
@@ -401,10 +407,10 @@
                             <div className="flex flex-col gap-4 p-4">
                                 <div className="flex gap-2 w-full h-[50vh] min-h-[300px]">
                                 {[0, 1].map((idx) => (
-                                    <div key={idx} className="flex-1 bg-gray-50 rounded-2xl border border-gray-200 overflow-hidden flex flex-col relative">
+                                    <div key={idx} className="flex-1 bg-white rounded-2xl border border-gray-200 overflow-hidden flex flex-col relative shadow-sm">
                                     {splitSelection[idx] ? (
                                         <>
-                                        <img src={photos[splitSelection[idx]]} className="w-full h-full object-contain bg-white" alt="" />
+                                        <img src={photos[splitSelection[idx]]} className="w-full h-full object-contain bg-black" alt="" />
                                         <div className="absolute top-3 left-3 bg-black/70 text-white text-[10px] px-2 py-1 rounded-md font-bold">{splitSelection[idx]}</div>
                                         <button onClick={() => { const newSel = [...splitSelection]; newSel[idx] = null; setSplitSelection(newSel); }} className="absolute top-3 right-3 bg-white shadow-sm w-6 h-6 flex items-center justify-center rounded-full text-black font-bold text-xs">X</button>
                                         </>
@@ -417,11 +423,10 @@
                                 <div className="bg-white rounded-2xl border border-gray-100 p-4 flex flex-col shadow-sm">
                                 <p className="text-xs text-gray-400 mb-3 font-bold px-1">비교할 사진 선택</p>
                                 <div className="grid grid-cols-2 gap-3">
-                                    {/* 1:1 비교 선택창: 세로 비율(aspect-[9/16]) 적용 및 사진 잘림 방지(object-contain) */}
                                     {sortedPhotoDates.map((date) => {
                                     const isSelected = splitSelection.includes(date);
                                     return (
-                                        <button key={date} disabled={isSelected} onClick={() => { const emptyIndex = splitSelection.indexOf(null); if (emptyIndex !== -1) { const newSel = [...splitSelection]; newSel[emptyIndex] = date; setSplitSelection(newSel); } else { setSplitSelection([splitSelection[1], date]); } }} className={`relative aspect-[9/16] rounded-xl overflow-hidden transition-all border bg-gray-100 group ${isSelected ? 'opacity-40 border-gray-200' : 'border-transparent hover:border-gray-300 shadow-sm'}`}>
+                                        <button key={date} disabled={isSelected} onClick={() => { const emptyIndex = splitSelection.indexOf(null); if (emptyIndex !== -1) { const newSel = [...splitSelection]; newSel[emptyIndex] = date; setSplitSelection(newSel); } else { setSplitSelection([splitSelection[1], date]); } }} className={`relative aspect-[9/16] rounded-xl overflow-hidden transition-all border bg-gray-50 group ${isSelected ? 'opacity-40 border-gray-200' : 'border-transparent hover:border-gray-300 shadow-sm'}`}>
                                             <img src={photos[date]} alt={date} className="w-full h-full object-contain" />
                                             <div className="absolute inset-x-0 bottom-0 bg-black/60 text-white text-sm font-bold py-2 text-center backdrop-blur-sm">
                                                 {date}
