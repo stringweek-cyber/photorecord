@@ -23,7 +23,7 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             touch-action: manipulation; 
-            background-color: #f9fafb; /* 전체 배경 살짝 회색조로 변경하여 박스 강조 */
+            background-color: #f9fafb;
         }
     </style>
 </head>
@@ -33,7 +33,7 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        // --- [핵심] IndexedDB 관리 함수 (변경 없음) ---
+        // --- [핵심] IndexedDB 관리 함수 ---
         const DB_NAME = 'PhotoLogDB';
         const STORE_NAME = 'photos';
         const DB_VERSION = 1;
@@ -178,7 +178,6 @@
                 loadData();
             }, []);
 
-            // 갤러리 뷰 진입 시 스크롤을 맨 오른쪽(최신)으로 이동
             useEffect(() => {
                 if (viewMode === 'compare' && compareMode === 'gallery' && scrollRef.current) {
                     setTimeout(() => {
@@ -236,7 +235,6 @@
                 {/* 헤더 */}
                 <header className="flex items-center justify-between px-5 py-4 bg-white border-b border-gray-100 z-20 shrink-0 select-none shadow-sm">
                     <h1 className="text-xl font-extrabold text-gray-900 tracking-tight flex items-center gap-2">
-                        {/* 카메라 이모지 대신 심플 체크 아이콘 */}
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-6 h-6 text-black">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                         </svg>
@@ -245,8 +243,8 @@
                     {viewMode === 'calendar' && (
                     <button 
                         onClick={() => setViewMode('compare')}
-                        /* 배경색 파란색, 폰트 사이즈 키움(text-sm) */
-                        className="text-sm font-bold text-white bg-blue-600 px-5 py-2.5 rounded-full active:bg-blue-700 transition-colors shadow-md hover:bg-blue-500"
+                        /* [수정] 배경색 연한 하늘색(bg-sky-400)으로 변경 */
+                        className="text-sm font-bold text-white bg-sky-400 px-5 py-2.5 rounded-full active:bg-sky-500 transition-colors shadow-md hover:bg-sky-300"
                     >
                         비교하기
                     </button>
@@ -266,9 +264,8 @@
                     {/* 달력 모드 */}
                     {viewMode === 'calendar' && (
                     <div className="flex flex-col min-h-full pb-10">
-                        {/* 달력 박스 컨테이너 */}
+                        {/* 달력 박스 */}
                         <div className="px-4 py-4 z-10">
-                            {/* 라운드 박스 스타일 적용 */}
                             <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-4 pb-6">
                                 <div className="flex items-center justify-center gap-8 py-2 select-none mb-2">
                                     <button onClick={prevMonth} className="text-gray-400 hover:text-black font-bold text-2xl p-2">&lt;</button>
@@ -348,15 +345,15 @@
                                 ) : (
                                     <div className="flex flex-col justify-start gap-4 py-2 px-6">
                                         <div className="grid grid-cols-2 gap-4">
-                                            {/* 버튼 높이를 작게 조절 (h-20 sm:h-24) */}
-                                            <label className="flex flex-col items-center justify-center gap-1 bg-white border border-indigo-100 hover:border-indigo-300 active:bg-indigo-50 rounded-2xl p-4 cursor-pointer transition-all shadow-sm h-20 sm:h-24">
+                                            {/* [수정] 배경색 연한 파란색(bg-blue-50)으로 변경 */}
+                                            <label className="flex flex-col items-center justify-center gap-1 bg-blue-50 border border-blue-100 hover:bg-blue-100 active:bg-blue-200 rounded-2xl p-4 cursor-pointer transition-all shadow-sm h-20 sm:h-24">
                                                 <div className="font-extrabold text-indigo-600 text-base">촬영</div>
-                                                <div className="text-indigo-300 text-[10px]">Camera</div>
+                                                <div className="text-indigo-400 text-[10px]">Camera</div>
                                                 <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhotoUpload} />
                                             </label>
-                                            <label className="flex flex-col items-center justify-center gap-1 bg-white border border-gray-200 hover:border-gray-300 active:bg-gray-50 rounded-2xl p-4 cursor-pointer transition-all shadow-sm h-20 sm:h-24">
+                                            <label className="flex flex-col items-center justify-center gap-1 bg-blue-50 border border-blue-100 hover:bg-blue-100 active:bg-blue-200 rounded-2xl p-4 cursor-pointer transition-all shadow-sm h-20 sm:h-24">
                                                 <div className="font-extrabold text-gray-700 text-base">앨범</div>
-                                                <div className="text-gray-300 text-[10px]">Gallery</div>
+                                                <div className="text-gray-400 text-[10px]">Gallery</div>
                                                 <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
                                             </label>
                                         </div>
@@ -387,15 +384,12 @@
                                 className="flex-1 overflow-x-auto flex items-center gap-6 p-6 snap-x snap-mandatory scrollbar-hide bg-gray-100 h-full"
                             >
                                 {gallerySortedDates.map((date) => (
-                                /* 슬라이드 뷰 수정: width를 화면보다 작게(w-[85vw]), 날짜를 사진 위로 배치 */
                                 <div key={date} className="snap-center shrink-0 w-[85vw] max-w-md h-[70vh] flex flex-col relative">
-                                    {/* 날짜 영역 */}
                                     <div className="flex justify-center mb-4">
                                         <span className="text-gray-500 font-extrabold text-lg tracking-wide bg-white px-4 py-1 rounded-full shadow-sm border border-gray-200">
                                             {date}
                                         </span>
                                     </div>
-                                    {/* 사진 영역 */}
                                     <div className="flex-1 bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] overflow-hidden flex items-center justify-center border border-gray-100">
                                         <img src={photos[date]} alt={date} className="w-full h-full object-contain" />
                                     </div>
