@@ -233,30 +233,41 @@
                 <div className="flex flex-col h-screen bg-gray-50 text-gray-800 font-sans overflow-hidden">
                 
                 {/* 헤더 */}
-                <header className="flex items-center justify-between px-5 py-4 bg-white border-b border-gray-100 z-20 shrink-0 select-none shadow-sm">
+                <header className="flex items-center justify-between px-5 py-4 z-20 shrink-0 select-none">
                     <h1 className="text-xl font-extrabold text-gray-900 tracking-tight flex items-center gap-2">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-6 h-6 text-black">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                         </svg>
                         사진기록
                     </h1>
-                    {viewMode === 'calendar' && (
-                    <button 
-                        onClick={() => setViewMode('compare')}
-                        /* [수정] 배경색 연한 하늘색(bg-sky-400)으로 변경 */
-                        className="text-sm font-bold text-white bg-sky-400 px-5 py-2.5 rounded-full active:bg-sky-500 transition-colors shadow-md hover:bg-sky-300"
-                    >
-                        비교하기
-                    </button>
-                    )}
-                    {viewMode === 'compare' && (
-                    <button 
-                        onClick={() => setViewMode('calendar')}
-                        className="text-sm font-bold text-gray-600 bg-gray-100 px-4 py-2 rounded-full active:bg-gray-200"
-                    >
-                        달력보기
-                    </button>
-                    )}
+                    
+                    {/* 세련된 슬라이딩 토글 버튼 */}
+                    <div className="relative flex bg-gray-100 rounded-full p-1 w-44 h-11 items-center shadow-inner select-none">
+                        {/* 슬라이딩 배경 (파란색 Pill: [수정] bg-blue-500으로 변경) */}
+                        <div 
+                            className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-blue-500 rounded-full shadow-md transition-all duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)] ${
+                                viewMode === 'calendar' ? 'left-1' : 'left-[calc(50%+2px)]'
+                            }`}
+                        />
+                        
+                        {/* 텍스트 버튼 (위치 고정, 색상만 변경) */}
+                        <button 
+                            onClick={() => setViewMode('calendar')}
+                            className={`flex-1 z-10 text-sm font-bold text-center transition-colors duration-200 ${
+                                viewMode === 'calendar' ? 'text-white' : 'text-gray-500 hover:text-gray-700'
+                            }`}
+                        >
+                            달력
+                        </button>
+                        <button 
+                            onClick={() => setViewMode('compare')}
+                            className={`flex-1 z-10 text-sm font-bold text-center transition-colors duration-200 ${
+                                viewMode === 'compare' ? 'text-white' : 'text-gray-500 hover:text-gray-700'
+                            }`}
+                        >
+                            비교하기
+                        </button>
+                    </div>
                 </header>
 
                 <main className="flex-1 overflow-y-auto scroll-smooth">
@@ -345,15 +356,21 @@
                                 ) : (
                                     <div className="flex flex-col justify-start gap-4 py-2 px-6">
                                         <div className="grid grid-cols-2 gap-4">
-                                            {/* [수정] 배경색 연한 파란색(bg-blue-50)으로 변경 */}
-                                            <label className="flex flex-col items-center justify-center gap-1 bg-blue-50 border border-blue-100 hover:bg-blue-100 active:bg-blue-200 rounded-2xl p-4 cursor-pointer transition-all shadow-sm h-20 sm:h-24">
-                                                <div className="font-extrabold text-indigo-600 text-base">촬영</div>
-                                                <div className="text-indigo-400 text-[10px]">Camera</div>
+                                            {/* 촬영 버튼: [수정] bg-blue-500으로 변경 */}
+                                            <label className="flex flex-col items-center justify-center gap-2 bg-blue-500 border border-blue-500 hover:bg-blue-600 active:bg-blue-700 rounded-2xl p-4 cursor-pointer transition-all shadow-md h-24 sm:h-28">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 text-white">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
+                                                </svg>
+                                                <div className="font-bold text-white text-base">촬영</div>
                                                 <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhotoUpload} />
                                             </label>
-                                            <label className="flex flex-col items-center justify-center gap-1 bg-blue-50 border border-blue-100 hover:bg-blue-100 active:bg-blue-200 rounded-2xl p-4 cursor-pointer transition-all shadow-sm h-20 sm:h-24">
-                                                <div className="font-extrabold text-gray-700 text-base">앨범</div>
-                                                <div className="text-gray-400 text-[10px]">Gallery</div>
+                                            {/* 앨범 버튼: [수정] bg-blue-500으로 변경 */}
+                                            <label className="flex flex-col items-center justify-center gap-2 bg-blue-500 border border-blue-500 hover:bg-blue-600 active:bg-blue-700 rounded-2xl p-4 cursor-pointer transition-all shadow-md h-24 sm:h-28">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 text-white">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                                                </svg>
+                                                <div className="font-bold text-white text-base">앨범</div>
                                                 <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
                                             </label>
                                         </div>
@@ -391,7 +408,7 @@
                                         </span>
                                     </div>
                                     <div className="flex-1 bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] overflow-hidden flex items-center justify-center border border-gray-100">
-                                        <img src={photos[date]} alt={date} className="w-full h-full object-contain" />
+                                        <img src={photos[date]} alt={date} className="w-full h-full object-cover" />
                                     </div>
                                 </div>
                                 ))}
